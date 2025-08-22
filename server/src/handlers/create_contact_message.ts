@@ -1,17 +1,27 @@
+import { db } from '../db';
+import { contactMessagesTable } from '../db/schema';
 import { type CreateContactMessageInput, type ContactMessage } from '../schema';
 
-export async function createContactMessage(input: CreateContactMessageInput): Promise<ContactMessage> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new contact message from the "Kontak" page form.
-    // This allows visitors to send inquiries through the contact form.
-    return Promise.resolve({
-        id: 0,
+export const createContactMessage = async (input: CreateContactMessageInput): Promise<ContactMessage> => {
+  try {
+    // Insert contact message record
+    const result = await db.insert(contactMessagesTable)
+      .values({
         name: input.name,
         email: input.email,
-        phone: input.phone || null,
-        subject: input.subject || null,
+        phone: input.phone,
+        subject: input.subject,
         message: input.message,
-        is_read: false,
-        created_at: new Date()
-    } as ContactMessage);
-}
+        is_read: false // Default to unread
+      })
+      .returning()
+      .execute();
+
+    // Return the created contact message
+    const contactMessage = result[0];
+    return contactMessage;
+  } catch (error) {
+    console.error('Contact message creation failed:', error);
+    throw error;
+  }
+};

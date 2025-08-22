@@ -1,8 +1,24 @@
+import { db } from '../db';
+import { faqTable } from '../db/schema';
 import { type FAQ } from '../schema';
+import { eq, asc } from 'drizzle-orm';
 
-export async function getFaqs(): Promise<FAQ[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all active FAQs ordered by order_index.
-    // This will populate the "FAQ" page with frequently asked questions.
-    return [];
-}
+export const getFaqs = async (): Promise<FAQ[]> => {
+  try {
+    // Fetch all active FAQs ordered by order_index
+    const results = await db.select()
+      .from(faqTable)
+      .where(eq(faqTable.is_active, true))
+      .orderBy(asc(faqTable.order_index))
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    return results.map(faq => ({
+      ...faq,
+      // No numeric columns in FAQ table that need conversion
+    }));
+  } catch (error) {
+    console.error('Failed to fetch FAQs:', error);
+    throw error;
+  }
+};

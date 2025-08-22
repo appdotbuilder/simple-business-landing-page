@@ -1,17 +1,25 @@
+import { db } from '../db';
+import { faqTable } from '../db/schema';
 import { type CreateFaqInput, type FAQ } from '../schema';
 
-export async function createFaq(input: CreateFaqInput): Promise<FAQ> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new FAQ entry with question and answer.
-    // FAQs will be displayed on the "FAQ" page, organized by category.
-    return Promise.resolve({
-        id: 0,
+export const createFaq = async (input: CreateFaqInput): Promise<FAQ> => {
+  try {
+    // Insert FAQ record
+    const result = await db.insert(faqTable)
+      .values({
         question: input.question,
         answer: input.answer,
-        category: input.category || null,
+        category: input.category,
         order_index: input.order_index,
-        is_active: input.is_active,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as FAQ);
-}
+        is_active: input.is_active
+      })
+      .returning()
+      .execute();
+
+    // Return the created FAQ with no numeric conversions needed
+    return result[0];
+  } catch (error) {
+    console.error('FAQ creation failed:', error);
+    throw error;
+  }
+};

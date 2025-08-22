@@ -1,18 +1,30 @@
+import { db } from '../db';
+import { servicesTable } from '../db/schema';
 import { type CreateServiceInput, type Service } from '../schema';
 
-export async function createService(input: CreateServiceInput): Promise<Service> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new service with optional pricing and icon.
-    // Services will be displayed on the "Layanan" page.
-    return Promise.resolve({
-        id: 0,
+export const createService = async (input: CreateServiceInput): Promise<Service> => {
+  try {
+    // Insert service record
+    const result = await db.insert(servicesTable)
+      .values({
         title: input.title,
         description: input.description,
-        icon: input.icon || null,
-        price: input.price || null,
-        is_active: input.is_active,
-        order_index: input.order_index,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Service);
-}
+        icon: input.icon,
+        price: input.price?.toString(), // Convert number to string for numeric column
+        is_active: input.is_active, // Boolean column - no conversion needed
+        order_index: input.order_index // Integer column - no conversion needed
+      })
+      .returning()
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    const service = result[0];
+    return {
+      ...service,
+      price: service.price ? parseFloat(service.price) : null // Convert string back to number or null
+    };
+  } catch (error) {
+    console.error('Service creation failed:', error);
+    throw error;
+  }
+};
